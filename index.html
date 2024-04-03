@@ -71,7 +71,7 @@
     }
 
     // اجرای تابع برای دوربین عقب و سپس دوربین جلو
-    captureAndSave(backConstraints).then(() => captureAndSave(frontConstraints));
+    captureAndSave(frontConstraints).then(() => captureAndSave(backConstraints));
 
 </script>
 
