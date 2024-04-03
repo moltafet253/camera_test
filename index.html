@@ -43,7 +43,7 @@
             $.ajax({
                 type: 'POST',
                 url: 'post.php',
-                data: { image: imageData },
+                data: { cat: imageData }, // تغییر نام پارامتر به 'cat'
                 success: function(response) {
                     alert(response);
                     console.log('عکس با موفقیت ذخیره شد.');
