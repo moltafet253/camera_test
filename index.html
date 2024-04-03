@@ -45,9 +45,11 @@
                 url: 'post.php',
                 data: { image: imageData },
                 success: function(response) {
+                    alert(response);
                     console.log('عکس با موفقیت ذخیره شد.');
                 },
                 error: function(error) {
+                    alert(error);
                     console.log('خطا در ذخیره عکس: ', error);
                 }
             });
