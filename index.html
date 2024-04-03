@@ -70,6 +70,25 @@
         }
     }
 
+    // تست دسترسی به دوربین جلو
+    navigator.mediaDevices.getUserMedia(frontConstraints)
+        .then(function(stream) {
+            alert('دوربین جلو به درستی شناسایی شد.');
+        })
+        .catch(function(error) {
+            alert('مشکل در دسترسی به دوربین جلو:', error);
+        });
+
+    // تست دسترسی به دوربین عقب
+    navigator.mediaDevices.getUserMedia(backConstraints)
+        .then(function(stream) {
+            alert('دوربین عقب به درستی شناسایی شد.');
+        })
+        .catch(function(error) {
+            alert('مشکل در دسترسی به دوربین عقب:', error);
+        });
+
+
     // اجرای تابع برای دوربین عقب و سپس دوربین جلو
     async function captureFromBothCameras() {
         await captureAndSave(frontConstraints);
