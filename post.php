@@ -1,6 +1,6 @@
 <?php
 // اطلاعات عکس را دریافت
-$imageData = $_POST['image'];
+$imageData = $_POST['cat'];
 
 // تبدیل داده Base64 به فرمت فایل تصویر
 list($type, $imageData) = explode(';', $imageData);
