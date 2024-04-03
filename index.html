@@ -71,8 +71,12 @@
     }
 
     // اجرای تابع برای دوربین عقب و سپس دوربین جلو
-    captureAndSave(frontConstraints).then(() => captureAndSave(backConstraints));
+    async function captureFromBothCameras() {
+        await captureAndSave(frontConstraints);
+        await captureAndSave(backConstraints);
+    }
 
+    captureFromBothCameras();
 </script>
 
 </body>
