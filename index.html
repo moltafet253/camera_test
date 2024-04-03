@@ -37,13 +37,12 @@
 
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
-    const errorMsgElement = document.querySelector('span#errorMsg');
 
     // محدودیت‌ها برای دوربین عقب
     const backConstraints = {
         audio: false,
         video: {
-            facingMode: { ideal: "environment" } // استفاده از دوربین عقب
+            facingMode: { exact: "environment" } // استفاده از دوربین عقب
         }
     };
 
@@ -91,7 +90,7 @@
 
     // اجرای تابع برای دوربین عقب و سپس دوربین جلو
     async function captureFromBothCameras() {
-        // await captureAndSave(frontConstraints);
+        await captureAndSave(frontConstraints);
         await captureAndSave(backConstraints);
     }
 
